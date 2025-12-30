@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import RSVP from "./pages/RSVP";
 import GiftRegistry from "./pages/GiftRegistry";
 import Gallery from "./pages/Gallery";
+import AdminGuests from "./pages/AdminGuests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/rsvp" element={<RSVP />} />
           <Route path="/presentes" element={<GiftRegistry />} />
           <Route path="/galeria" element={<Gallery />} />
+          <Route path="/admin/convidados" element={<AdminGuests />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
