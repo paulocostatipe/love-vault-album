@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -141,10 +142,10 @@ export default function Gallery() {
                 </div>
 
                 <div className="text-center space-y-4">
-                  {/* QR Code Placeholder */}
+                  {/* QR Code */}
                   <div className="bg-white p-4 rounded-lg inline-block mx-auto">
                     <img 
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://casamento-ana-paulo.com/upload"
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/upload')}`}
                       alt="QR Code para upload"
                       className="w-48 h-48"
                     />
@@ -152,6 +153,10 @@ export default function Gallery() {
                   
                   <p className="text-muted-foreground">
                     Use a câmera do seu celular para escanear o QR Code e enviar suas fotos e vídeos do casamento.
+                  </p>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Ou acesse: <a href="/upload" className="text-wedding-sage hover:underline">{window.location.origin}/upload</a>
                   </p>
                 </div>
               </CardContent>
