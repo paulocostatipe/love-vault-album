@@ -1,5 +1,5 @@
 -- Criar usuário administrador
--- Email: paulo
+-- Email: paulo@casamento.com
 -- Senha: Century123!
 
 -- Método 1: Usando a função do Supabase (Recomendado)
@@ -35,7 +35,7 @@ BEGIN
     gen_random_uuid(),
     'authenticated',
     'authenticated',
-    'paulo',
+    'paulo@casamento.com',
     crypt('Century123!', gen_salt('bf')),
     now(),
     now(),
@@ -66,7 +66,7 @@ BEGIN
     gen_random_uuid(),
     user_id,
     user_id::text,  -- provider_id é o mesmo que o user_id como string
-    format('{"sub":"%s","email":"%s"}', user_id::text, 'paulo')::jsonb,
+    format('{"sub":"%s","email":"%s"}', user_id::text, 'paulo@casamento.com')::jsonb,
     'email',
     now(),
     now(),
@@ -127,5 +127,5 @@ SELECT
   email_confirmed_at,
   created_at
 FROM auth.users
-WHERE email = 'paulo';
+WHERE email = 'paulo@casamento.com';
 

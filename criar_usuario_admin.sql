@@ -1,6 +1,6 @@
 -- Script SQL para criar usuário administrador
 -- Execute este script no SQL Editor do Supabase
--- Email: paulo
+-- Email: paulo@casamento.com
 -- Senha: Century123!
 
 -- IMPORTANTE: Execute este script no SQL Editor do Supabase Dashboard
@@ -29,7 +29,7 @@ VALUES (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'paulo',
+  'paulo@casamento.com',
   crypt('Century123!', gen_salt('bf')),
   now(),
   now(),
@@ -58,13 +58,13 @@ INSERT INTO auth.identities (
 SELECT 
   gen_random_uuid(),
   u.id,
-  jsonb_build_object('sub', u.id::text, 'email', u.email),
+  jsonb_build_object('sub', u.id::text, 'email', 'paulo@casamento.com'),
   'email',
   now(),
   now(),
   now()
 FROM auth.users u
-WHERE u.email = 'paulo'
+WHERE u.email = 'paulo@casamento.com'
 ON CONFLICT DO NOTHING;
 
 -- Verificar se o usuário foi criado
@@ -78,5 +78,5 @@ SELECT
     ELSE 'Não confirmado'
   END as status
 FROM auth.users
-WHERE email = 'paulo';
+WHERE email = 'paulo@casamento.com';
 
