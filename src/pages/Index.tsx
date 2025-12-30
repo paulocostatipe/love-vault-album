@@ -30,7 +30,7 @@ const Index = () => {
             className="font-serif text-6xl md:text-8xl lg:text-9xl text-foreground mb-6 animate-fade-in-up"
             style={{ animationDelay: "0.4s" }}
           >
-            Marina <span className="text-wedding-sage">&</span> João
+            Ana <span className="text-wedding-sage">&</span> Paulo
           </h1>
           
           <div 
@@ -89,8 +89,8 @@ const Index = () => {
                 <Calendar className="w-7 h-7 text-wedding-sage" />
               </div>
               <h3 className="font-serif text-2xl text-foreground mb-2">Data</h3>
-              <p className="font-sans text-muted-foreground">15 de Março, 2025</p>
-              <p className="font-sans text-sm text-muted-foreground mt-1">Sábado</p>
+              <p className="font-sans text-muted-foreground">30 de Abril, 2025</p>
+              <p className="font-sans text-sm text-muted-foreground mt-1">Quarta-feira</p>
             </div>
 
             {/* Time */}
@@ -109,8 +109,8 @@ const Index = () => {
                 <MapPin className="w-7 h-7 text-wedding-gold" />
               </div>
               <h3 className="font-serif text-2xl text-foreground mb-2">Local</h3>
-              <p className="font-sans text-muted-foreground">Fazenda Vista Verde</p>
-              <p className="font-sans text-sm text-muted-foreground mt-1">São Paulo, SP</p>
+              <p className="font-sans text-muted-foreground">Gravatá</p>
+              <p className="font-sans text-sm text-muted-foreground mt-1">Pernambuco</p>
             </div>
           </div>
         </div>
