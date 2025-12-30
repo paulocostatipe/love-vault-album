@@ -21,7 +21,7 @@ export function Navigation() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <Heart className="w-5 h-5 text-wedding-sage group-hover:scale-110 transition-transform duration-300" />
-            <span className="font-serif text-xl md:text-2xl text-foreground">M & J</span>
+            <span className="font-serif text-xl md:text-2xl text-foreground">A & P</span>
           </Link>
 
           {/* Desktop Navigation */}
