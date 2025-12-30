@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Upload as UploadIcon, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Upload() {
   const [file, setFile] = useState<File | null>(null);
@@ -80,13 +81,52 @@ export default function Upload() {
     setIsUploading(true);
 
     try {
-      // Aqui você pode integrar com Supabase Storage ou outro serviço
-      // Por enquanto, vamos simular o upload
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `gallery/${fileName}`;
+
+      // Upload para Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        // Se o bucket não existir, vamos criar uma mensagem mais clara
+        if (uploadError.message.includes('Bucket not found')) {
+          throw new Error('Bucket "gallery" não encontrado. Por favor, crie o bucket no Supabase Storage.');
+        }
+        throw uploadError;
+      }
+
+      // Obter URL pública do arquivo
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery')
+        .getPublicUrl(filePath);
+
+      // Salvar metadados na tabela
+      const { error: dbError } = await supabase
+        .from('gallery_media')
+        .insert({
+          url: publicUrl,
+          type: file.type.startsWith('image/') ? 'image' : 'video',
+          author: author.trim(),
+          caption: caption.trim() || null,
+          likes: 0
+        });
+
+      if (dbError) {
+        // Se a tabela não existir, tentar deletar o arquivo enviado
+        await supabase.storage.from('gallery').remove([filePath]);
+        throw dbError;
+      }
 
       toast({
         title: "Upload realizado!",
-        description: "Sua foto foi enviada com sucesso e será publicada em breve.",
+        description: "Sua foto foi enviada com sucesso e já está na galeria.",
       });
 
       // Limpar formulário
@@ -95,14 +135,15 @@ export default function Upload() {
       setAuthor("");
       setCaption("");
 
-      // Redirecionar para galeria após 2 segundos
+      // Redirecionar para galeria
       setTimeout(() => {
         navigate("/galeria");
-      }, 2000);
-    } catch (error) {
+      }, 1500);
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
       toast({
         title: "Erro no upload",
-        description: "Não foi possível enviar o arquivo. Tente novamente.",
+        description: error.message || "Não foi possível enviar o arquivo. Tente novamente.",
         variant: "destructive",
       });
     } finally {

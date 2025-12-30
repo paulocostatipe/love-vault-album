@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Heart, X, Trash2, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MediaItem {
-  id: number;
+  id: string;
   type: "image" | "video";
   url: string;
   author: string;
@@ -25,79 +26,135 @@ interface MediaItem {
   timestamp: Date;
 }
 
-const initialMedia: MediaItem[] = [
-  {
-    id: 1,
-    type: "image",
-    url: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop",
-    author: "Fernanda Silva",
-    caption: "Que dia lindo! 💕",
-    likes: 12,
-    timestamp: new Date(),
-  },
-  {
-    id: 2,
-    type: "image",
-    url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=400&fit=crop",
-    author: "Carlos Santos",
-    caption: "A decoração está maravilhosa!",
-    likes: 8,
-    timestamp: new Date(),
-  },
-  {
-    id: 3,
-    type: "image",
-    url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=400&fit=crop",
-    author: "Ana Oliveira",
-    caption: "Viva os noivos! 🎉",
-    likes: 15,
-    timestamp: new Date(),
-  },
-  {
-    id: 4,
-    type: "image",
-    url: "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=400&h=400&fit=crop",
-    author: "Pedro Costa",
-    caption: "Momento especial",
-    likes: 6,
-    timestamp: new Date(),
-  },
-];
-
 export default function Gallery() {
-  const [media, setMedia] = useState<MediaItem[]>(initialMedia);
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [showQrCode, setShowQrCode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleLike = (id: number) => {
-    setMedia(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, likes: item.likes + 1 } : item
-      )
-    );
+  // Carregar fotos do Supabase
+  useEffect(() => {
+    loadMedia();
+  }, []);
+
+  const loadMedia = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('gallery_media')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedMedia: MediaItem[] = data.map((item) => ({
+          id: item.id,
+          type: item.type as "image" | "video",
+          url: item.url,
+          author: item.author,
+          caption: item.caption || "",
+          likes: item.likes || 0,
+          timestamp: new Date(item.created_at),
+        }));
+        setMedia(formattedMedia);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar mídia:', error);
+      toast({
+        title: "Erro ao carregar galeria",
+        description: error.message || "Não foi possível carregar as fotos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteClick = (id: number, e: React.MouseEvent) => {
+  const handleLike = async (id: string) => {
+    try {
+      const item = media.find(m => m.id === id);
+      if (!item) return;
+
+      const newLikes = item.likes + 1;
+      
+      // Atualizar no banco
+      const { error } = await supabase
+        .from('gallery_media')
+        .update({ likes: newLikes })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setMedia(prev =>
+        prev.map(m =>
+          m.id === id ? { ...m, likes: newLikes } : m
+        )
+      );
+    } catch (error: any) {
+      console.error('Erro ao dar like:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o like.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setPhotoToDelete(id);
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (photoToDelete !== null) {
-      setMedia(prev => prev.filter(item => item.id !== photoToDelete));
-      if (selectedMedia?.id === photoToDelete) {
-        setSelectedMedia(null);
+      try {
+        // Buscar item para obter a URL do arquivo
+        const item = media.find(m => m.id === photoToDelete);
+        
+        // Deletar do banco de dados
+        const { error: dbError } = await supabase
+          .from('gallery_media')
+          .delete()
+          .eq('id', photoToDelete);
+
+        if (dbError) throw dbError;
+
+        // Tentar deletar o arquivo do storage (opcional, pode falhar se não tiver permissão)
+        if (item?.url) {
+          const urlParts = item.url.split('/gallery/');
+          if (urlParts.length > 1) {
+            const fileName = urlParts[1].split('?')[0];
+            await supabase.storage.from('gallery').remove([fileName]);
+          }
+        }
+
+        // Atualizar estado local
+        setMedia(prev => prev.filter(item => item.id !== photoToDelete));
+        if (selectedMedia?.id === photoToDelete) {
+          setSelectedMedia(null);
+        }
+        
+        toast({
+          title: "Foto removida",
+          description: "A foto foi removida da galeria.",
+        });
+      } catch (error: any) {
+        console.error('Erro ao deletar:', error);
+        toast({
+          title: "Erro ao remover",
+          description: "Não foi possível remover a foto.",
+          variant: "destructive",
+        });
+      } finally {
+        setDeleteDialogOpen(false);
+        setPhotoToDelete(null);
       }
-      setDeleteDialogOpen(false);
-      setPhotoToDelete(null);
-      toast({
-        title: "Foto removida",
-        description: "A foto foi removida da galeria.",
-      });
     }
   };
 
@@ -164,9 +221,20 @@ export default function Gallery() {
           </div>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+              <Heart className="w-10 h-10 text-muted-foreground animate-pulse" />
+            </div>
+            <p className="text-muted-foreground">Carregando galeria...</p>
+          </div>
+        )}
+
         {/* Gallery Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((item) => (
+        {!isLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {media.map((item) => (
             <div 
               key={item.id}
               className="group relative aspect-square rounded-lg overflow-hidden cursor-pointer"
@@ -197,7 +265,8 @@ export default function Gallery() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Lightbox */}
         {selectedMedia && (
@@ -243,7 +312,7 @@ export default function Gallery() {
                 <Button
                   variant="wedding-outline"
                   size="sm"
-                  onClick={() => handleLike(selectedMedia.id)}
+                  onClick={() => handleLike(selectedMedia.id as string)}
                   className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-foreground"
                 >
                   <Heart className="w-4 h-4 mr-2" />
@@ -254,7 +323,7 @@ export default function Gallery() {
           </div>
         )}
 
-        {media.length === 0 && (
+        {!isLoading && media.length === 0 && (
           <div className="text-center py-16">
             <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
               <QrCode className="w-10 h-10 text-muted-foreground" />
