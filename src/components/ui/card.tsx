@@ -1,10 +1,34 @@
 import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
-));
+const cardVariants = cva(
+  "rounded-lg border bg-card text-card-foreground",
+  {
+    variants: {
+      variant: {
+        default: "shadow-sm",
+        elevated: "shadow-card hover:shadow-elevated transition-shadow duration-300",
+        wedding: "shadow-card bg-gradient-to-br from-card to-muted/30 border-wedding-sage/20",
+        gift: "shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div ref={ref} className={cn(cardVariants({ variant, className }))} {...props} />
+  )
+);
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -16,14 +40,14 @@ CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
+    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight font-serif", className)} {...props} />
   ),
 );
 CardTitle.displayName = "CardTitle";
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+    <p ref={ref} className={cn("text-sm text-muted-foreground font-sans", className)} {...props} />
   ),
 );
 CardDescription.displayName = "CardDescription";
