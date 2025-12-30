@@ -4,29 +4,50 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Heart, Users, Utensils } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-// Simulated guest data - in production this would come from a database
-const guestDatabase: Record<string, { name: string; companions: number; confirmed?: boolean }> = {
-  "ABC123": { name: "Fernanda Silva", companions: 2 },
-  "DEF456": { name: "Carlos Santos", companions: 1 },
-  "GHI789": { name: "Ana Oliveira", companions: 3 },
-  "JKL012": { name: "Pedro Costa", companions: 0 },
-};
+interface Guest {
+  id: string;
+  name: string;
+  companions: number;
+  confirmed: boolean | null;
+}
 
 export default function RSVP() {
   const [code, setCode] = useState("");
-  const [guest, setGuest] = useState<{ name: string; companions: number; confirmed?: boolean } | null>(null);
+  const [guestId, setGuestId] = useState<string | null>(null);
+  const [guest, setGuest] = useState<Guest | null>(null);
   const [isConfirmed, setIsConfirmed] = useState<boolean | null>(null);
   const [dietaryRestrictions, setDietaryRestrictions] = useState("");
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleCodeSubmit = (e: React.FormEvent) => {
+  const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const foundGuest = guestDatabase[code.toUpperCase()];
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .maybeSingle();
+
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Erro ao buscar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
     
-    if (foundGuest) {
-      setGuest(foundGuest);
-      setIsConfirmed(foundGuest.confirmed ?? null);
+    if (data) {
+      setGuestId(data.id);
+      setGuest({ id: data.id, name: data.name, companions: data.companions, confirmed: data.confirmed });
+      setIsConfirmed(data.confirmed);
+      setDietaryRestrictions(data.dietary_restrictions || "");
     } else {
       toast({
         title: "Código não encontrado",
@@ -36,13 +57,52 @@ export default function RSVP() {
     }
   };
 
-  const handleConfirmation = (attending: boolean) => {
+  const handleConfirmation = async (attending: boolean) => {
+    if (!guestId) return;
+
+    const { error } = await supabase
+      .from('guests')
+      .update({ confirmed: attending })
+      .eq('id', guestId);
+
+    if (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsConfirmed(attending);
     toast({
       title: attending ? "Presença confirmada!" : "Resposta registrada",
       description: attending 
         ? "Estamos ansiosos para celebrar com você!" 
         : "Sentiremos sua falta, mas agradecemos por nos avisar.",
+    });
+  };
+
+  const handleSaveDietary = async () => {
+    if (!guestId) return;
+
+    const { error } = await supabase
+      .from('guests')
+      .update({ dietary_restrictions: dietaryRestrictions })
+      .eq('id', guestId);
+
+    if (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Salvo!",
+      description: "Suas restrições alimentares foram registradas.",
     });
   };
 
@@ -84,8 +144,8 @@ export default function RSVP() {
                     className="text-center text-lg tracking-widest uppercase"
                     maxLength={6}
                   />
-                  <Button type="submit" variant="wedding" className="w-full" size="lg">
-                    Buscar Convite
+                  <Button type="submit" variant="wedding" className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Buscando..." : "Buscar Convite"}
                   </Button>
                 </form>
 
@@ -161,7 +221,7 @@ export default function RSVP() {
                         value={dietaryRestrictions}
                         onChange={(e) => setDietaryRestrictions(e.target.value)}
                       />
-                      <Button variant="wedding-outline" size="sm" className="w-full">
+                      <Button variant="wedding-outline" size="sm" className="w-full" onClick={handleSaveDietary}>
                         Salvar
                       </Button>
                     </div>
@@ -201,8 +261,10 @@ export default function RSVP() {
                   variant="ghost"
                   onClick={() => {
                     setGuest(null);
+                    setGuestId(null);
                     setCode("");
                     setIsConfirmed(null);
+                    setDietaryRestrictions("");
                   }}
                   className="w-full text-muted-foreground"
                 >
