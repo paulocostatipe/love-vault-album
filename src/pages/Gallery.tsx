@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Heart, X, Trash2, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -57,6 +67,8 @@ export default function Gallery() {
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleLike = (id: number) => {
@@ -67,14 +79,25 @@ export default function Gallery() {
     );
   };
 
-  const handleDelete = (id: number, e: React.MouseEvent) => {
+  const handleDeleteClick = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setMedia(prev => prev.filter(item => item.id !== id));
-    setSelectedMedia(null);
-    toast({
-      title: "Foto removida",
-      description: "A foto foi removida da galeria.",
-    });
+    setPhotoToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (photoToDelete !== null) {
+      setMedia(prev => prev.filter(item => item.id !== photoToDelete));
+      if (selectedMedia?.id === photoToDelete) {
+        setSelectedMedia(null);
+      }
+      setDeleteDialogOpen(false);
+      setPhotoToDelete(null);
+      toast({
+        title: "Foto removida",
+        description: "A foto foi removida da galeria.",
+      });
+    }
   };
 
   return (
@@ -153,8 +176,9 @@ export default function Gallery() {
               
               {/* Delete Button */}
               <button
-                onClick={(e) => handleDelete(item.id, e)}
-                className="absolute top-2 right-2 p-2 bg-destructive/80 hover:bg-destructive rounded-full text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                onClick={(e) => handleDeleteClick(item.id, e)}
+                className="absolute top-2 right-2 p-2 bg-destructive/90 hover:bg-destructive rounded-full text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                title="Excluir foto"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -182,14 +206,19 @@ export default function Gallery() {
             >
               <div className="absolute -top-12 right-0 flex items-center gap-4">
                 <button 
-                  onClick={(e) => handleDelete(selectedMedia.id, e)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(selectedMedia.id, e);
+                  }}
                   className="text-destructive hover:text-destructive/80 transition-colors"
+                  title="Excluir foto"
                 >
                   <Trash2 className="w-7 h-7" />
                 </button>
                 <button 
                   onClick={() => setSelectedMedia(null)}
                   className="text-primary-foreground hover:text-wedding-sage transition-colors"
+                  title="Fechar"
                 >
                   <X className="w-8 h-8" />
                 </button>
@@ -233,6 +262,29 @@ export default function Gallery() {
             </p>
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta foto? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPhotoToDelete(null)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </main>
   );

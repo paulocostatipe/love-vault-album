@@ -62,6 +62,26 @@ This project is built with:
 
 ## How can I deploy this project?
 
+### Deploy Simples no Ubuntu (Recomendado)
+
+**Método mais simples - apenas 3 comandos:**
+
+```bash
+npm install
+npm run build
+pm2 serve dist 3000 --spa --name "love-vault-album"
+```
+
+Acesse: `http://seu-ip:3000`
+
+📖 **Guia completo:** [DEPLOY_SIMPLES.md](./DEPLOY_SIMPLES.md)
+
+### Deploy com Nginx (Produção)
+
+Para usar domínio próprio e HTTPS, consulte: **[DEPLOY_UBUNTU.md](./DEPLOY_UBUNTU.md)**
+
+### Deploy via Lovable
+
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
