@@ -20,7 +20,7 @@ const initialMedia: MediaItem[] = [
     id: 1,
     type: "image",
     url: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop",
-    author: "Maria Silva",
+    author: "Fernanda Silva",
     caption: "Que dia lindo! 💕",
     likes: 12,
     timestamp: new Date(),
