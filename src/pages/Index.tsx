@@ -13,21 +13,21 @@ const Index = () => {
           <img
             src={heroImage}
             alt="Ana e Paulo"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover object-[center_25%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-background" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 text-center pt-20">
           <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-            <p className="font-sans text-sm tracking-[0.3em] uppercase text-wedding-sage mb-4">
+            <p className="font-sans text-sm tracking-[0.3em] uppercase text-white/90 mb-4 drop-shadow-md">
               Celebrando nosso amor
             </p>
           </div>
           
           <h1 
-            className="font-serif text-6xl md:text-8xl lg:text-9xl text-foreground mb-6 animate-fade-in-up"
+            className="font-serif text-6xl md:text-8xl lg:text-9xl text-white mb-6 animate-fade-in-up drop-shadow-lg"
             style={{ animationDelay: "0.4s" }}
           >
             Ana <span className="text-wedding-sage">&</span> Paulo
@@ -43,7 +43,7 @@ const Index = () => {
           </div>
 
           <p 
-            className="font-serif text-2xl md:text-3xl text-muted-foreground mb-12 animate-fade-in-up"
+            className="font-serif text-2xl md:text-3xl text-white/80 mb-12 animate-fade-in-up drop-shadow-md"
             style={{ animationDelay: "0.8s" }}
           >
             Convidamos você para celebrar conosco
