@@ -58,7 +58,6 @@ INSERT INTO auth.identities (
 SELECT 
   gen_random_uuid(),
   u.id,
-  u.id::text,  -- provider_id é o mesmo que o user_id como string
   jsonb_build_object('sub', u.id::text, 'email', u.email),
   'email',
   now(),

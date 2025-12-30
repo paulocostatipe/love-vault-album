@@ -5,10 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Users, CheckCircle, XCircle, Clock, RefreshCw, Search, Download, Copy, Shuffle, LogOut } from "lucide-react";
+import { Plus, Trash2, Edit, Users, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Guest {
@@ -28,10 +26,7 @@ export default function AdminGuests() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [newGuest, setNewGuest] = useState({ name: "", code: "", companions: 0 });
-  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
 
   const fetchGuests = async () => {
     setLoading(true);
@@ -63,71 +58,6 @@ export default function AdminGuests() {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
-  };
-
-  const handleGenerateCode = () => {
-    setNewGuest({ ...newGuest, code: generateCode() });
-  };
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast({
-      title: "Código copiado!",
-      description: `Código ${code} copiado para a área de transferência.`,
-    });
-  };
-
-  const handleExportCSV = () => {
-    const headers = ['Nome', 'Código', 'Acompanhantes', 'Status', 'Restrições Alimentares'];
-    const rows = guests.map(guest => [
-      guest.name,
-      guest.code,
-      guest.companions.toString(),
-      guest.confirmed === true ? 'Confirmado' : guest.confirmed === false ? 'Não irá' : 'Pendente',
-      guest.dietary_restrictions || ''
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `convidados-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast({
-      title: "Exportado!",
-      description: "Lista de convidados exportada com sucesso.",
-    });
-  };
-
-  const filteredGuests = guests.filter(guest =>
-    guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    guest.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate("/admin/login");
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer logout",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   };
 
   const handleAddGuest = async () => {
@@ -286,35 +216,12 @@ export default function AdminGuests() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Buscar por nome ou código..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <Button variant="ghost" onClick={fetchGuests} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
           
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={fetchGuests} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-            
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
-            </Button>
-            
-            <Button variant="outline" onClick={handleLogout} className="text-red-600 hover:text-red-700">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
-            </Button>
-            
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="wedding">
@@ -322,7 +229,7 @@ export default function AdminGuests() {
                   Adicionar Convidado
                 </Button>
               </DialogTrigger>
-            <DialogContent>
+              <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Convidado</DialogTitle>
                 <DialogDescription>
@@ -340,19 +247,7 @@ export default function AdminGuests() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="code">Código (opcional)</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleGenerateCode}
-                      className="h-8"
-                    >
-                      <Shuffle className="w-3 h-3 mr-1" />
-                      Gerar
-                    </Button>
-                  </div>
+                  <Label htmlFor="code">Código (opcional)</Label>
                   <Input
                     id="code"
                     placeholder="Será gerado automaticamente"
@@ -390,9 +285,7 @@ export default function AdminGuests() {
           <CardHeader>
             <CardTitle>Lista de Convidados</CardTitle>
             <CardDescription>
-              {searchTerm 
-                ? `${filteredGuests.length} convidado(s) encontrado(s)` 
-                : `Todos os convidados cadastrados e seus status de confirmação`}
+              Todos os convidados cadastrados e seus status de confirmação
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -418,23 +311,10 @@ export default function AdminGuests() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredGuests.map((guest) => (
+                    {guests.map((guest) => (
                       <TableRow key={guest.id}>
                         <TableCell className="font-medium">{guest.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm">{guest.code}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => handleCopyCode(guest.code)}
-                              title="Copiar código"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{guest.code}</TableCell>
                         <TableCell className="text-center">{guest.companions}</TableCell>
                         <TableCell className="text-center">
                           {guest.confirmed === true && (
