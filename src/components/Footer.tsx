@@ -9,7 +9,7 @@ export function Footer() {
           <Heart className="w-4 h-4 text-wedding-rose fill-wedding-rose" />
           <span className="font-sans text-sm">para nosso grande dia</span>
         </div>
-        <p className="mt-2 font-serif text-lg text-foreground">Marina & João</p>
+        <p className="mt-2 font-serif text-lg text-foreground">Ana & Paulo</p>
       </div>
     </footer>
   );

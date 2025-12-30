@@ -51,7 +51,7 @@ const initialGifts: GiftItem[] = [
     image: "🎤",
     category: "Diversão",
     reserved: true,
-    reservedBy: "Tio João",
+    reservedBy: "Tio Pedro",
   },
   {
     id: 5,
@@ -106,7 +106,7 @@ const initialGifts: GiftItem[] = [
     image: "🤖",
     category: "Casa",
     reserved: true,
-    reservedBy: "Vó Maria",
+    reservedBy: "Vó Rosa",
   },
   {
     id: 11,

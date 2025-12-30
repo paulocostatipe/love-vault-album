@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // Simulated guest data - in production this would come from a database
 const guestDatabase: Record<string, { name: string; companions: number; confirmed?: boolean }> = {
-  "ABC123": { name: "Maria Silva", companions: 2 },
+  "ABC123": { name: "Fernanda Silva", companions: 2 },
   "DEF456": { name: "Carlos Santos", companions: 1 },
   "GHI789": { name: "Ana Oliveira", companions: 3 },
   "JKL012": { name: "Pedro Costa", companions: 0 },
