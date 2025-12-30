@@ -5,10 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import RSVP from "./pages/RSVP";
 import GiftRegistry from "./pages/GiftRegistry";
 import Gallery from "./pages/Gallery";
+import Upload from "./pages/Upload";
+import Login from "./pages/Login";
 import AdminGuests from "./pages/AdminGuests";
 import NotFound from "./pages/NotFound";
 
@@ -16,6 +20,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <AuthProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -26,12 +31,22 @@ const App = () => (
           <Route path="/rsvp" element={<RSVP />} />
           <Route path="/presentes" element={<GiftRegistry />} />
           <Route path="/galeria" element={<Gallery />} />
-          <Route path="/admin/convidados" element={<AdminGuests />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/admin/login" element={<Login />} />
+            <Route
+              path="/admin/convidados"
+              element={
+                <ProtectedRoute>
+                  <AdminGuests />
+                </ProtectedRoute>
+              }
+            />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </BrowserRouter>
     </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
