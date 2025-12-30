@@ -12,8 +12,8 @@ const Index = () => {
         <div className="absolute inset-0">
           <img
             src={heroImage}
-            alt="Decoração floral do casamento"
-            className="w-full h-full object-cover"
+            alt="Ana e Paulo"
+            className="w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
         </div>
